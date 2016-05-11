@@ -52,6 +52,9 @@ public class NotificationMusicReceiver extends BroadcastReceiver {
         remoteView.setOnClickPendingIntent(R.id.notificationnext,pendingIntent2);
         notification.contentView = remoteView;
         notificationManager.notify(0,notification);
+        //关闭之前的定时器
+        if(MusicActivity.timer != null) MusicActivity.timer.cancel();
+        if(MusicActivity.timerTask != null) MusicActivity.timerTask.cancel();
     }
 
 }

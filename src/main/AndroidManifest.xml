@@ -33,7 +33,8 @@
         </activity>
 
         <service android:name=".service.MusicService"></service>
-        <activity android:name=".MusicActivity"></activity>
+        <activity android:name=".MusicActivity"
+            android:launchMode="singleTop"></activity>
     </application>
 
 </manifest>

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -28,8 +29,8 @@ public class MusicActivity extends Activity {
     private TextView textMusicStartTime,textMusicEndTime,textCurrentMusic,textAllMusic,textMusicTitle,textMusicSinger;
     private int position;
     private Music music;
-    private Timer timer;
-    private TimerTask timerTask;
+    public static Timer timer;
+    public static TimerTask timerTask;
     private boolean isFromNotification;
 
 
@@ -84,8 +85,6 @@ public class MusicActivity extends Activity {
     };
 
     private void playMusic(int pos, boolean isNext){
-        timer.cancel();
-        timerTask.cancel();
         if(isNext){
             ++ pos;
             if(pos >= MusicService.musicList.size()) pos = 0;
@@ -94,6 +93,7 @@ public class MusicActivity extends Activity {
             if(pos < 0) pos = MusicService.musicList.size() - 1;
         }
         position = pos;
+
         Intent intent = new Intent(MusicActivity.this,MusicService.class);
         intent.putExtra("position",position);
         startService(intent);
@@ -131,19 +131,27 @@ public class MusicActivity extends Activity {
         textMusicEndTime.setText(CommonUtils.toTime((int) music.getTime()));
         musicSeekBar.setMax((int)music.getTime());
 
-        if(isFromNotification){
+        if(isFromNotification){ //来自通知栏点击
             textMusicStartTime.setText(CommonUtils.toTime((int) current * 1000));
         }else {
             current = 0;
             textMusicStartTime.setText("00:00");
         }
 
-        if(timer != null && timerTask != null){
+        //如果点击另外一首音乐 计时器和任务需取消重新启动
+        if(timer != null){
             timer.cancel();
-            timerTask.cancel();
+            Log.i("Music","111");
         }
 
+        if(timerTask != null){
+            timerTask.cancel();
+            Log.i("Music","222");
+        }
+
+        //如果来自通知栏点击打开事件 之前的定时器需要关闭
         timer = new Timer(); //启动计时器
+
         timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -169,6 +177,7 @@ public class MusicActivity extends Activity {
             switch (msg.what){
                 case 1:
                     int cur = (int) msg.obj;
+                    Log.i("Music",cur+"");
                     musicSeekBar.setProgress(cur * 1000);
                     textMusicStartTime.setText(CommonUtils.toTime(cur * 1000));
                     if((cur * 1000) == music.getTime()) {
@@ -203,4 +212,13 @@ public class MusicActivity extends Activity {
             current = seekBar.getProgress() / 1000;
         }
     };
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //事件销毁的时候一定记得关闭定时器
+        timer.cancel();
+        timerTask.cancel();
+    }
 }
